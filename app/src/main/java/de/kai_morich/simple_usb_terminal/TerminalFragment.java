@@ -62,10 +62,12 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
 
     private Connected connected = Connected.False;
     private boolean initialStart = true;
-    private boolean hexEnabled = false;
+    private boolean hexEnabled = true;
     private boolean controlLinesEnabled = false;
     private boolean pendingNewline = false;
     private String newline = TextUtil.newline_crlf;
+
+    private boolean isEnableShowing = true;
 
     public TerminalFragment() {
         broadcastReceiver = new BroadcastReceiver() {
@@ -237,6 +239,12 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
                 status("send BREAK failed: " + e.getMessage());
             }
             return true;
+        } else if (id == R.id.pause) {
+            isEnableShowing = false;
+            return true;
+        } else if (id == R.id.resume) {
+            isEnableShowing = true;
+            return true;
         } else {
             return super.onOptionsItemSelected(item);
         }
@@ -290,7 +298,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         connected = Connected.Pending;
         try {
             usbSerialPort.open(usbConnection);
-            usbSerialPort.setParameters(baudRate, UsbSerialPort.DATABITS_8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE);
+            usbSerialPort.setParameters(baudRate, UsbSerialPort.DATABITS_8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_EVEN);
             SerialSocket socket = new SerialSocket(getActivity().getApplicationContext(), usbConnection, usbSerialPort);
             service.connect(socket);
             // usb connect is not asynchronous. connect-success and connect-error are returned immediately from socket.connect
@@ -338,10 +346,18 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     }
 
     private void receive(ArrayDeque<byte[]> datas) {
+        if( isEnableShowing == false ) return;
+
         SpannableStringBuilder spn = new SpannableStringBuilder();
         for (byte[] data : datas) {
             if (hexEnabled) {
-                spn.append(TextUtil.toHexString(data)).append('\n');
+                for (byte b : data) {
+                    if ((b & 0xFF) > 0x80) {
+                        spn.append('\n');
+                    }
+                    spn.append(TextUtil.toHexString(new byte [] { b} ));
+                    spn.append(' ');
+                }
             } else {
                 String msg = new String(data);
                 if (newline.equals(TextUtil.newline_crlf) && msg.length() > 0) {
