@@ -104,19 +104,39 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
-        <EditText
-            android:id="@+id/send_text"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:inputType="text|textNoSuggestions"
-            android:singleLine="true" />
-
-        <ImageButton
-            android:id="@+id/send_btn"
+        <Button
+            android:id="@+id/send_1_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:srcCompat="@drawable/ic_send_white_24dp" />
+            android:text="TX_1"
+            android:textSize="24sp"
+            android:textColor="#000000"
+            android:background="@android:color/transparent"/>
+        <Button
+            android:id="@+id/send_2_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="TX_2"
+            android:textSize="24sp"
+            android:textColor="#000000"
+            android:background="@android:color/transparent"/>
+        <Button
+            android:id="@+id/send_3_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="TX_3"
+            android:textSize="24sp"
+            android:textColor="#000000"
+            android:background="@android:color/transparent"/>
+        <Button
+            android:id="@+id/send_4_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="TX_4"
+            android:textSize="24sp"
+            android:textColor="#000000"
+            android:background="@android:color/transparent"/>
+
     </LinearLayout>
 
 </LinearLayout>

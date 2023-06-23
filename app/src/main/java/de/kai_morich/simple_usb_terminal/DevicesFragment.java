@@ -97,19 +97,6 @@ public class DevicesFragment extends ListFragment {
         if(id == R.id.refresh) {
             refresh();
             return true;
-        } else if (id ==R.id.baud_rate) {
-            final String[] baudRates = getResources().getStringArray(R.array.baud_rates);
-            int pos = java.util.Arrays.asList(baudRates).indexOf(String.valueOf(baudRate));
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            builder.setTitle("Baud rate");
-            builder.setSingleChoiceItems(baudRates, pos, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int item) {
-                    baudRate = Integer.parseInt(baudRates[item]);
-                    dialog.dismiss();
-                }
-            });
-            builder.create().show();
-            return true;
         } else {
             return super.onOptionsItemSelected(item);
         }

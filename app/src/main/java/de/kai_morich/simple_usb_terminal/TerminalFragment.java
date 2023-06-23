@@ -28,6 +28,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -56,18 +57,14 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     private SerialService service;
 
     private TextView receiveText;
-    private TextView sendText;
     private ControlLines controlLines;
     private TextUtil.HexWatcher hexWatcher;
 
     private Connected connected = Connected.False;
     private boolean initialStart = true;
-    private boolean hexEnabled = true;
     private boolean controlLinesEnabled = false;
     private boolean pendingNewline = false;
     private String newline = TextUtil.newline_crlf;
-
-    private boolean isEnableShowing = true;
 
     public TerminalFragment() {
         broadcastReceiver = new BroadcastReceiver() {
@@ -176,14 +173,46 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         receiveText.setTextColor(getResources().getColor(R.color.colorRecieveText)); // set as default color to reduce number of spans
         receiveText.setMovementMethod(ScrollingMovementMethod.getInstance());
 
-        sendText = view.findViewById(R.id.send_text);
-        hexWatcher = new TextUtil.HexWatcher(sendText);
-        hexWatcher.enable(hexEnabled);
-        sendText.addTextChangedListener(hexWatcher);
-        sendText.setHint(hexEnabled ? "HEX mode" : "");
+        Button Tx_1_btn = view.findViewById(R.id.send_1_btn);
+        Tx_1_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Perform the desired action when the button is clicked
+                byte[] byteArray = {0x30, 0x31, 0x32};
+                send(byteArray);
+            }
+        });
 
-        View sendBtn = view.findViewById(R.id.send_btn);
-        sendBtn.setOnClickListener(v -> send(sendText.getText().toString()));
+        Button Tx_2_btn = view.findViewById(R.id.send_2_btn);
+        Tx_2_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Perform the desired action when the button is clicked
+                byte[] byteArray = {0x33, 0x34, 0x35};
+                send(byteArray);
+            }
+        });
+
+        Button Tx_3_btn = view.findViewById(R.id.send_3_btn);
+        Tx_3_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Perform the desired action when the button is clicked
+                byte[] byteArray = {0x36, 0x37, 0x38};
+                send(byteArray);
+            }
+        });
+
+        Button Tx_4_btn = view.findViewById(R.id.send_4_btn);
+        Tx_4_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Perform the desired action when the button is clicked
+                byte[] byteArray = {0x39, 0x39, 0x39};
+                send(byteArray);
+            }
+        });
+
         controlLines = new ControlLines(view);
         return view;
     }
@@ -191,8 +220,6 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.menu_terminal, menu);
-        menu.findItem(R.id.hex).setChecked(hexEnabled);
-        menu.findItem(R.id.controlLines).setChecked(controlLinesEnabled);
     }
 
     @Override
@@ -201,49 +228,11 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         if (id == R.id.clear) {
             receiveText.setText("");
             return true;
-        } else if (id == R.id.newline) {
-            String[] newlineNames = getResources().getStringArray(R.array.newline_names);
-            String[] newlineValues = getResources().getStringArray(R.array.newline_values);
-            int pos = java.util.Arrays.asList(newlineValues).indexOf(newline);
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            builder.setTitle("Newline");
-            builder.setSingleChoiceItems(newlineNames, pos, (dialog, item1) -> {
-                newline = newlineValues[item1];
-                dialog.dismiss();
-            });
-            builder.create().show();
-            return true;
-        } else if (id == R.id.hex) {
-            hexEnabled = !hexEnabled;
-            sendText.setText("");
-            hexWatcher.enable(hexEnabled);
-            sendText.setHint(hexEnabled ? "HEX mode" : "");
-            item.setChecked(hexEnabled);
-            return true;
-        } else if (id == R.id.controlLines) {
-            controlLinesEnabled = !controlLinesEnabled;
-            item.setChecked(controlLinesEnabled);
-            if (controlLinesEnabled) {
-                controlLines.start();
-            } else {
-                controlLines.stop();
-            }
-            return true;
-        } else if (id == R.id.sendBreak) {
-            try {
-                usbSerialPort.setBreak(true);
-                Thread.sleep(100);
-                status("send BREAK");
-                usbSerialPort.setBreak(false);
-            } catch (Exception e) {
-                status("send BREAK failed: " + e.getMessage());
-            }
-            return true;
         } else if (id == R.id.pause) {
-            isEnableShowing = false;
+            disconnect();
             return true;
         } else if (id == R.id.resume) {
-            isEnableShowing = true;
+            connect();
             return true;
         } else {
             return super.onOptionsItemSelected(item);
@@ -316,28 +305,25 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         usbSerialPort = null;
     }
 
-    private void send(String str) {
+    private void send(byte[] byteArray) {
         if(connected != Connected.True) {
             Toast.makeText(getActivity(), "not connected", Toast.LENGTH_SHORT).show();
             return;
         }
         try {
-            String msg;
-            byte[] data;
-            if(hexEnabled) {
-                StringBuilder sb = new StringBuilder();
-                TextUtil.toHexString(sb, TextUtil.fromHexString(str));
-                TextUtil.toHexString(sb, newline.getBytes());
-                msg = sb.toString();
-                data = TextUtil.fromHexString(msg);
-            } else {
-                msg = str;
-                data = (str + newline).getBytes();
+            StringBuilder sb = new StringBuilder();
+            for (byte b : byteArray) {
+                if( sb.length() != 0 ){
+                    sb.append(" ");
+                }
+                sb.append(String.format("%02X", b));
             }
+            String msg = sb.toString();
+
             SpannableStringBuilder spn = new SpannableStringBuilder(msg + '\n');
             spn.setSpan(new ForegroundColorSpan(getResources().getColor(R.color.colorSendText)), 0, spn.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             receiveText.append(spn);
-            service.write(data);
+            service.write(byteArray);
         } catch (SerialTimeoutException e) {
             status("write timeout: " + e.getMessage());
         } catch (Exception e) {
@@ -346,36 +332,14 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
     }
 
     private void receive(ArrayDeque<byte[]> datas) {
-        if( isEnableShowing == false ) return;
-
         SpannableStringBuilder spn = new SpannableStringBuilder();
         for (byte[] data : datas) {
-            if (hexEnabled) {
-                for (byte b : data) {
-                    if ((b & 0xFF) > 0x80) {
-                        spn.append('\n');
-                    }
-                    spn.append(TextUtil.toHexString(new byte [] { b} ));
-                    spn.append(' ');
+            for (byte b : data) {
+                if ((b & 0xFF) > 0x80) {
+                    spn.append('\n');
                 }
-            } else {
-                String msg = new String(data);
-                if (newline.equals(TextUtil.newline_crlf) && msg.length() > 0) {
-                    // don't show CR as ^M if directly before LF
-                    msg = msg.replace(TextUtil.newline_crlf, TextUtil.newline_lf);
-                    // special handling if CR and LF come in separate fragments
-                    if (pendingNewline && msg.charAt(0) == '\n') {
-                        if(spn.length() >= 2) {
-                            spn.delete(spn.length() - 2, spn.length());
-                        } else {
-                            Editable edt = receiveText.getEditableText();
-                            if (edt != null && edt.length() >= 2)
-                                edt.delete(edt.length() - 2, edt.length());
-                        }
-                    }
-                    pendingNewline = msg.charAt(msg.length() - 1) == '\r';
-                }
-                spn.append(TextUtil.toCaretString(msg, newline.length() != 0));
+                spn.append(TextUtil.toHexString(new byte [] { b} ));
+                spn.append(' ');
             }
         }
         receiveText.append(spn);
