@@ -178,7 +178,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             @Override
             public void onClick(View v) {
                 // Perform the desired action when the button is clicked
-                byte[] byteArray = {0x30, 0x31, 0x32};
+                byte[] byteArray = {0x24, 0x44, 0x00, 0x00, 0x06, 0x00, (byte)0x93, 0x00, 0x03, 0x72, 0x00, 0x00, (byte)0x93, 0x29};
                 send(byteArray);
             }
         });
@@ -188,7 +188,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             @Override
             public void onClick(View v) {
                 // Perform the desired action when the button is clicked
-                byte[] byteArray = {0x33, 0x34, 0x35};
+                byte[] byteArray = {0x24, 0x44, 0x00, 0x00, 0x06, 0x00, (byte)0x93};
                 send(byteArray);
             }
         });
@@ -198,7 +198,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
             @Override
             public void onClick(View v) {
                 // Perform the desired action when the button is clicked
-                byte[] byteArray = {0x36, 0x37, 0x38};
+                byte[] byteArray = {0x00, 0x03, 0x72, 0x00, 0x00, (byte)0x93, 0x29};
                 send(byteArray);
             }
         });
@@ -287,7 +287,7 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         connected = Connected.Pending;
         try {
             usbSerialPort.open(usbConnection);
-            usbSerialPort.setParameters(baudRate, UsbSerialPort.DATABITS_8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_EVEN);
+            usbSerialPort.setParameters(baudRate, UsbSerialPort.DATABITS_8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE);
             SerialSocket socket = new SerialSocket(getActivity().getApplicationContext(), usbConnection, usbSerialPort);
             service.connect(socket);
             // usb connect is not asynchronous. connect-success and connect-error are returned immediately from socket.connect
@@ -335,13 +335,11 @@ public class TerminalFragment extends Fragment implements ServiceConnection, Ser
         SpannableStringBuilder spn = new SpannableStringBuilder();
         for (byte[] data : datas) {
             for (byte b : data) {
-                if ((b & 0xFF) > 0x80) {
-                    spn.append('\n');
-                }
                 spn.append(TextUtil.toHexString(new byte [] { b} ));
                 spn.append(' ');
             }
         }
+        spn.append('\n');
         receiveText.append(spn);
     }
 
